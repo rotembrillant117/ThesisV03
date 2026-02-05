@@ -1,8 +1,8 @@
 from tktkt.factories.preprocessors import ModernEnglishPreprocessor_SentencePieceCompatible, KudoSpaceMarker
-from vocabularisers.xSageVocabulariser import xSageVocabulariser
-from vocabularisers.xBPEVocabulariser import xBPEVocabulariser
-from vocabularisers.xKudoPieceVocabulariser import xKudoVocabulariser
-from utils.training_data_utils import load_local_corpus_to_hf
+from src.vocabularisers.xSageVocabulariser import xSageVocabulariser
+from src.vocabularisers.xBPEVocabulariser import xBPEVocabulariser
+from src.vocabularisers.xKudoPieceVocabulariser import xKudoVocabulariser
+from src.utils.training_data_utils import load_local_corpus_to_hf
 import sys
 import json
 
@@ -28,7 +28,7 @@ def train_vocabulariser(algo, language, vocab_size, training_data_path):
     return results
 
 if __name__ == "__main__":
-    args_path = sys.argv[1:]
+    args_path = sys.argv[1:][0]
     data = parse_args(args_path)
     algorithms = data['algos']
     vocab_size = data['vocab_size']
