@@ -39,8 +39,8 @@ if __name__ == "__main__":
 
     # Training l2 vocabularisers and multilingual vocabularisers
     l2_data = data['l2']
-    for i in range(l2_data):
-        for algo in algorithms[0]:
+    for i in range(1):
+        for algo in algorithms:
             train_vocabulariser(algo, l2_data[i]['language'], vocab_size, l2_data[i]['training_data'])
             train_vocabulariser(algo, f"{l1_data['language']}_{l2_data[i]['language']}", vocab_size, l2_data[i]['multilingual_training_data'])
 
