@@ -41,18 +41,25 @@ def get_language_dictionary(language):
     return set(line1)
 
 
-def filter_words_by_frequency(word_freqs, threshold=50):
+def filter_words_by_frequency(word_freqs, threshold=30):
     filtered_words = {}
     for word, freq in word_freqs.items():
         if freq >= threshold:
             filtered_words[word] = freq
     return filtered_words
 
-def get_crosslingual_homographs(l1, l2, freq_threshold=50):
+def filter_words_by_len(word_freqs, length=2):
+    filtered_words = {}
+    for word, freq in word_freqs.items():
+        if len(word) > length:
+            filtered_words[word] = freq
+    return filtered_words
+
+def get_crosslingual_homographs(l1, l2, freq_threshold=30):
     l1_dict = get_language_dictionary(l1)
     l2_dict = get_language_dictionary(l2)
-    l1_corpus_words = set(filter_words_by_frequency(get_corpus_words(l1), freq_threshold).keys())
-    l2_corpus_words = set(filter_words_by_frequency(get_corpus_words(l2), freq_threshold).keys())
+    l1_corpus_words = set(filter_words_by_len(filter_words_by_frequency(get_corpus_words(l1), freq_threshold)).keys())
+    l2_corpus_words = set(filter_words_by_len(filter_words_by_frequency(get_corpus_words(l2), freq_threshold)).keys())
     return l1_dict & l2_dict & l1_corpus_words & l2_corpus_words
 
 
@@ -69,3 +76,4 @@ def load_local_corpus_to_hf(path):
 
     return Dataset.from_dict({"text": lines})
 
+print(len(get_crosslingual_homographs("en", "de")))
