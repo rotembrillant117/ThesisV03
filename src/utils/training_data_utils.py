@@ -1,4 +1,4 @@
-from datasets import Dataset
+from datasets import Dataset, DatasetInfo
 import csv
 from pathlib import Path
 
@@ -55,11 +55,11 @@ def filter_words_by_len(word_freqs, length=2):
             filtered_words[word] = freq
     return filtered_words
 
-def get_crosslingual_homographs(l1, l2, freq_threshold=30):
+def get_crosslingual_homographs(l1, l2):
     l1_dict = get_language_dictionary(l1)
     l2_dict = get_language_dictionary(l2)
-    l1_corpus_words = set(filter_words_by_len(filter_words_by_frequency(get_corpus_words(l1), freq_threshold)).keys())
-    l2_corpus_words = set(filter_words_by_len(filter_words_by_frequency(get_corpus_words(l2), freq_threshold)).keys())
+    l1_corpus_words = set(filter_words_by_len(filter_words_by_frequency(get_corpus_words(l1))).keys())
+    l2_corpus_words = set(filter_words_by_len(filter_words_by_frequency(get_corpus_words(l2))).keys())
     return l1_dict & l2_dict & l1_corpus_words & l2_corpus_words
 
 
@@ -73,7 +73,6 @@ def get_ff(path):
 def load_local_corpus_to_hf(path):
     with open(path, "r", encoding="utf-8") as f:
         lines = [line.strip() for line in f if line.strip()]
+    info = DatasetInfo(dataset_name=f"{Path(path).stem}")
+    return Dataset.from_dict({"text": lines}, info=info)
 
-    return Dataset.from_dict({"text": lines})
-
-print(len(get_crosslingual_homographs("en", "de")))
