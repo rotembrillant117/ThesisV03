@@ -2,7 +2,6 @@ from src.vocabularisers.xSageVocabulariser import xSageVocabulariser
 from src.vocabularisers.xBPEVocabulariser import xBPEVocabulariser
 from src.vocabularisers.xKudoPieceVocabulariser import xKudoVocabulariser
 from src.utils.training_data_utils import load_local_corpus_to_hf
-import json
 import sentencepiece as spm
 from tktkt.models.kudopiece.vocabularisation import KudoPieceVocabulariser
 from tktkt.preparation.boundaries import BoundaryMarker, BoundaryMarkerLocation
@@ -33,10 +32,6 @@ def patched_train(actual_vocab_size, **remaining_arguments):
     )
 KudoPieceVocabulariser._callSentencePieceTrainer = staticmethod(patched_train)
 
-def parse_args(path):
-    with open(path, 'r') as f:
-        data = json.load(f)
-    return data
 
 def train_vocabulariser(algo, language, vocab_size, training_data_path):
 
@@ -44,7 +39,7 @@ def train_vocabulariser(algo, language, vocab_size, training_data_path):
     preprocessor = Prefab2(BoundaryMarker("_", detached=False, location=BoundaryMarkerLocation.START))
     if "SAGE" in algo:
         base_algo = algo.split("_")[0]
-        base_artifacts = train_vocabulariser(base_algo, language, vocab_size, training_data_path)
+        base_artifacts, _ = train_vocabulariser(base_algo, language, vocab_size, training_data_path)
         vocabulariser = xSageVocabulariser(base_artifacts, vocab_size, language, base_algo)
     elif "BPE" in algo:
         vocabulariser = xBPEVocabulariser(preprocessor, vocab_size, language)
@@ -52,12 +47,11 @@ def train_vocabulariser(algo, language, vocab_size, training_data_path):
         vocabulariser = xKudoVocabulariser(preprocessor, vocab_size, language)
 
     results = vocabulariser.vocabulariseFromHf(corpus_ds, text_field="text")
-    return results
+    return results, vocabulariser
 
 
-def train(args_path):
+def train(data):
 
-    data = parse_args(args_path)
     algorithms = data['algos']
     vocab_size = data['vocab_size']
     # Training l1 vocabularisers
