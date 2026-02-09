@@ -1,4 +1,4 @@
-from train_vocabularisers import train_vocabulariser
+from .train_vocabularisers import train_vocabulariser
 
 def get_trial(algo, l2, vocab_size, l1_corpus_path, l2_corpus_path, l1_l2_corpus_path, cues_corpus_path):
     l2_artifacts, l2_v = train_vocabulariser(algo, l2, vocab_size, l2_corpus_path)

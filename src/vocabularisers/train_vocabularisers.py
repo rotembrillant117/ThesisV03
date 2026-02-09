@@ -2,41 +2,42 @@ from src.vocabularisers.xSageVocabulariser import xSageVocabulariser
 from src.vocabularisers.xBPEVocabulariser import xBPEVocabulariser
 from src.vocabularisers.xKudoPieceVocabulariser import xKudoVocabulariser
 from src.utils.training_data_utils import load_local_corpus_to_hf
-import sentencepiece as spm
-from tktkt.models.kudopiece.vocabularisation import KudoPieceVocabulariser
+from src.preprocessors.cue_preprocessor import CuePreprocessor
 from tktkt.preparation.boundaries import BoundaryMarker, BoundaryMarkerLocation
-from tktkt.factories.preprocessors import Prefab2
+from tktkt.factories.preprocessors import ModernEnglishPreprocessor_SentencePieceCompatible
 
-def patched_train(actual_vocab_size, **remaining_arguments):
-
-    # We must explicitly set the arguments tktkt normally sets,
-    # And we MUST set split_by_unicode_script=False.
-
-    spm.SentencePieceTrainer.Train(
-        **remaining_arguments,
-        vocab_size=actual_vocab_size + 1,
-        hard_vocab_limit=True,
-        byte_fallback=False,
-        vocabulary_output_piece_score=True,
-        control_symbols=[],
-        user_defined_symbols=[],
-        bos_id=-1, eos_id=-1, pad_id=-1,
-        normalization_rule_name="identity",
-        add_dummy_prefix=False,
-        remove_extra_whitespaces=False,
-        split_by_whitespace=False,
-        split_by_unicode_script=False,  # Lets language cues merge
-        split_by_number=True,
-        split_digits=False,
-        allow_whitespace_only_pieces=False
-    )
-KudoPieceVocabulariser._callSentencePieceTrainer = staticmethod(patched_train)
+# def patched_train(actual_vocab_size, **remaining_arguments):
+#
+#     # We must explicitly set the arguments tktkt normally sets,
+#     # And we MUST set split_by_unicode_script=False.
+#
+#     spm.SentencePieceTrainer.Train(
+#         **remaining_arguments,
+#         vocab_size=actual_vocab_size + 1,
+#         hard_vocab_limit=True,
+#         byte_fallback=False,
+#         vocabulary_output_piece_score=True,
+#         control_symbols=[],
+#         user_defined_symbols=[],
+#         bos_id=-1, eos_id=-1, pad_id=-1,
+#         normalization_rule_name="identity",
+#         add_dummy_prefix=False,
+#         remove_extra_whitespaces=False,
+#         split_by_whitespace=False,
+#         split_by_unicode_script=False,  # Lets language cues merge
+#         split_by_number=True,
+#         split_digits=False,
+#         allow_whitespace_only_pieces=False
+#     )
+# KudoPieceVocabulariser._callSentencePieceTrainer = staticmethod(patched_train)
 
 
 def train_vocabulariser(algo, language, vocab_size, training_data_path):
 
     corpus_ds = load_local_corpus_to_hf(training_data_path)
-    preprocessor = Prefab2(BoundaryMarker("_", detached=False, location=BoundaryMarkerLocation.START))
+    # preprocessor = Prefab2(BoundaryMarker("_", detached=False, location=BoundaryMarkerLocation.START))
+    marker = BoundaryMarker("_", detached=False, location=BoundaryMarkerLocation.START)
+    preprocessor = CuePreprocessor(marker=marker)
     if "SAGE" in algo:
         base_algo = algo.split("_")[0]
         base_artifacts, _ = train_vocabulariser(base_algo, language, vocab_size, training_data_path)
