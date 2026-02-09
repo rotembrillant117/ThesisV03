@@ -64,7 +64,7 @@ def get_crosslingual_homographs(l1, l2):
 
 
 
-def get_ff(path):
+def get_ff_by_path(path):
     with open(path, 'r', encoding='utf-8') as f:
         # list of dictionaries
         return list(csv.DictReader(f))

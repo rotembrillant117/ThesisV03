@@ -8,10 +8,10 @@ def create_results_directory(data):
     algos = data['algos']
     # l1 = data['l1']['language']
     l2 = [data['l2'][i]['language'] for i in range(len(data['l2']))]
-    for v in vocab_size:
-        for l in l2:
-            for algo in algos:
-                Path(STATS_DIR / f"{v}" / f"{l}" / f"{algo}").mkdir(parents=True, exist_ok=True)
 
-def get_results_directory():
-    pass
+    for l in l2:
+        for algo in algos:
+            Path(STATS_DIR / f"{vocab_size}" / f"{l}" / f"{algo}").mkdir(parents=True, exist_ok=True)
+
+def get_results_directory(v, l, algo):
+    return Path(STATS_DIR / f"{v}" / f"{l}" / f"{algo}")
