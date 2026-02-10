@@ -3,6 +3,11 @@ from tktkt.preparation.splitters import PretokeniserSequence, MapperAsPretokenis
 from tktkt.factories.preprocessors import ModernEnglishPretokeniser, TruncateAndNormalise
 from tktkt.preparation.boundaries import BoundaryMarker
 from src.utils.unicode import get_language_map
+from tktkt.preparation.splitters import (
+    PretokeniserSequence, MapperAsPretokeniser, IsolatePunctuation, HyphenMode,
+    WhitespacePretokeniser, IsolateEnglishContractions, PolariseApostrophes,
+    AddWordBoundary, GroupDigits, IsolateConnectingHyphens, AddCapitalMarker
+)
 
 class CueMapping(InvertibleTextMapper):
     """
@@ -75,3 +80,27 @@ class CuePreprocessor(Preprocessor):
             uninvertible_mapping=TruncateAndNormalise(truncate_after_chars=1_000_000),
             invertible_mapping=CueMapping(),
             splitter=CueSplitter(marker=marker))
+
+
+class CuePrefab2(Preprocessor):
+    """
+    Combines the robust splitting logic of Prefab2 with the safe CueMapping.
+    This ensures we handle contractions, digits, and capitalization robustly (like Prefab2),
+    while also mapping language cues to safe Latin characters (like CuePreprocessor)
+    to prevent tokenizer crashes.
+    """
+    def __init__(self, marker: BoundaryMarker, truncate_text_after_chars: int=1_000_000):
+        super().__init__(
+            uninvertible_mapping=TruncateAndNormalise(truncate_text_after_chars),
+            invertible_mapping=CueMapping(), # Use CueMapping instead of RegisterASCII
+            splitter=PretokeniserSequence([
+                IsolatePunctuation(HyphenMode.EXCLUDED, protect_apostrophes_without_spaces=True),
+                WhitespacePretokeniser(destructive=True),
+                IsolateEnglishContractions(do_nt=True),
+                PolariseApostrophes(tiebreak_left=True),
+                AddWordBoundary(marker),
+                GroupDigits(n=3),
+                IsolateConnectingHyphens(),
+                AddCapitalMarker(ignore_marker=marker)
+            ])
+        )

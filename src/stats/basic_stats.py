@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 
 def tokenization_cases(tokenizers_list, word_list, l1, l2, categories):
@@ -68,24 +69,24 @@ def plot_tokenization_cases(num_tokens_diff, algo, l1, l2, categories, word_type
     plt.savefig(fig_save_path)
     plt.close()
     
-def get_avg_token_length_over_vocab(tokenizer):
+def get_avg_token_length_over_vocab(artifact):
     """
-    Calculates the average characters per token for tokenizer vocabulary
-    :param tokenizer: the tokenizer object
-    :return: cpt
+    Calculates the average token length for tokenizer vocabulary
+    :param artifact: the artifact object
+    :return:
     """
-    vocab = tokenizer.get_vocab()
+    vocab = artifact.getVocabulary()
     num_chars = sum([len(v) for v in vocab])
     return num_chars / len(vocab)
 
 
-def get_token_length_distribution(tokenizer):
+def get_token_length_distribution(artifact):
     """
     Returns the token length distribution oh the tokens in the tokenizer vocabulary
-    :param tokenizer: the tokenizer object
+    :param artifact: the artifact object
     :return:
     """
-    vocab = tokenizer.get_vocab()
+    vocab = artifact.getVocabulary()
     distribution = dict()
     for v in vocab:
         distribution[len(v)] = distribution.get(len(v), 0) + 1
@@ -93,3 +94,29 @@ def get_token_length_distribution(tokenizer):
         distribution[k] = v / len(vocab)
     sorted_dis = {key: distribution[key] for key in sorted(distribution.keys())}
     return sorted_dis
+
+def write_tokenization_split(tokenizers, ff_data, l1, l2, algo, dir):
+    """
+    Writes the tokenization splits of different tokenizers to a .txt file
+    :param tokenizers: a list of tokenizers, [l1 tokenizer, l2 tokenizer, l1_l2 tokenizer]
+    :param ff_data: the ff data
+    :param l1: language 1 (english)
+    :param l2: language 2
+    :param algo: the algorithm used
+    :param dir: path to save .txt file
+    :return:
+    """
+    with open(f"{dir}/{algo}.txt", 'w', encoding='utf-8') as f:
+        f.write(f"{l1}_tokenizer, {l2}_tokenizer, {l1}_{l2}_tokenizer\n")
+        for ff in ff_data:
+            to_write = f""
+            for t in tokenizers:
+                to_write += f"{t.prepareAndTokenise(ff)}"
+            to_write += "\n"
+            f.write(to_write)
+
+def do_basic_stats(trial, vocab_size):
+
+    with open(Path(trial.get_stats_directory() / "basic_stats.txt"), 'w', encoding='utf-8') as f:
+        lines = f.readlines()
+

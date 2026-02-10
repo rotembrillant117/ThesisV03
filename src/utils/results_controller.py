@@ -11,7 +11,8 @@ def create_results_directory(data):
 
     for l in l2:
         for algo in algos:
-            Path(STATS_DIR / f"{vocab_size}" / f"{l}" / f"{algo}").mkdir(parents=True, exist_ok=True)
+            Path(STATS_DIR / f"{vocab_size}" / f"{l}" / f"{algo}" / "graphs").mkdir(parents=True, exist_ok=True)
+            Path(STATS_DIR / f"{vocab_size}" / f"{l}" / f"{algo}" / "stats").mkdir(parents=True, exist_ok=True)
 
 def get_results_directory(v, l, algo):
     return Path(STATS_DIR / f"{v}" / f"{l}" / f"{algo}")

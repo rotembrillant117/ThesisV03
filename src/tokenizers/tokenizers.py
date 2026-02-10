@@ -1,6 +1,41 @@
 from tktkt.models.sage.inference import SageTokeniser
 from tktkt.models.huggingface.bpe import HuggingFaceBPETokeniser
 from tktkt.models.kudopiece.segmentation import KudoPieceTokeniser
+from tktkt.interfaces.tokenisers import TokeniserWithVocabulary, WithSpecials
+from tktkt.models.sage.vocabularisation import SageVocabulariser
+
+
+class FixedSageTokeniser(SageTokeniser):
+    def __init__(self, preprocessor, vocab):
+        init_vocab_hex = {
+            SageVocabulariser._toHexString(t): i for t, i in vocab.items()
+        }
+
+        next_id = max(vocab.values()) + 1 if vocab else 0
+        extended_vocab_dict = dict(vocab)
+
+        for i in range(256):
+            b_hex = bytes([i]).hex()
+            if b_hex not in init_vocab_hex:
+                init_vocab_hex[b_hex] = next_id
+
+                extended_vocab_dict[f"<byte:{b_hex}>"] = next_id
+
+                next_id += 1
+        from tktkt.interfaces.identifiers import Vocab
+
+        sorted_types = sorted(extended_vocab_dict.keys(), key=extended_vocab_dict.get)
+
+        extended_vocab = Vocab(
+            ordered_types=sorted_types,
+            specials=vocab.specials,
+            unk_id=vocab.UNK
+        )
+
+        TokeniserWithVocabulary.__init__(self, preprocessor=preprocessor, vocab=extended_vocab)
+
+        from sage_tokenizer.model import SaGeTokenizer
+        self.backend = SaGeTokenizer(initial_vocabulary=init_vocab_hex)
 
 def get_tokenizers(all_trials):
     tokenizers = {}
@@ -11,7 +46,7 @@ def get_tokenizers(all_trials):
             for artifacts, vocabulariser in all_trials[language][algo]:
 
                 if "SAGE" in algo:
-                    tok = SageTokeniser(
+                    tok = FixedSageTokeniser(
                         preprocessor=vocabulariser.preprocessor,
                         vocab=artifacts.getVocabulary()
                     )

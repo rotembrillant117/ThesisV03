@@ -2,7 +2,7 @@ from src.vocabularisers.xSageVocabulariser import xSageVocabulariser
 from src.vocabularisers.xBPEVocabulariser import xBPEVocabulariser
 from src.vocabularisers.xKudoPieceVocabulariser import xKudoVocabulariser
 from src.utils.training_data_utils import load_local_corpus_to_hf
-from src.preprocessors.cue_preprocessor import CuePreprocessor
+from src.preprocessors.cue_preprocessor import CuePreprocessor, CuePrefab2
 from tktkt.preparation.boundaries import BoundaryMarker, BoundaryMarkerLocation
 from tktkt.factories.preprocessors import ModernEnglishPreprocessor_SentencePieceCompatible
 
@@ -35,9 +35,9 @@ from tktkt.factories.preprocessors import ModernEnglishPreprocessor_SentencePiec
 def train_vocabulariser(algo, language, vocab_size, training_data_path):
 
     corpus_ds = load_local_corpus_to_hf(training_data_path)
-    # preprocessor = Prefab2(BoundaryMarker("_", detached=False, location=BoundaryMarkerLocation.START))
     marker = BoundaryMarker("_", detached=False, location=BoundaryMarkerLocation.START)
-    preprocessor = CuePreprocessor(marker=marker)
+    preprocessor = CuePrefab2(marker=marker)
+    # preprocessor = CuePreprocessor(marker=marker)
     if "SAGE" in algo:
         base_algo = algo.split("_")[0]
         base_artifacts, _ = train_vocabulariser(base_algo, language, vocab_size, training_data_path)

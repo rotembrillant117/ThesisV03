@@ -2,7 +2,7 @@ from .train_vocabularisers import train_vocabulariser
 from ..tokenizers.tokenizers import get_tokenizers
 from ..utils.training_data_utils import get_ff_by_path, get_crosslingual_homographs
 from src.utils.results_controller import get_results_directory
-
+from pathlib import Path
 
 class Trial:
 
@@ -15,12 +15,20 @@ class Trial:
         self.algo = algo
         self.homographs = get_crosslingual_homographs("en", l2)
         self.results_directory = get_results_directory(self.vocab_size, self.l2, self.algo)
+        self.graph_directory = Path(self.results_directory / "graphs")
+        self.stats_directory = Path(self.results_directory / "stats")
+
+    def get_tokenizers(self):
+        return self.tokenizers
 
     def get_base_tokenizers(self):
         return self.tokenizers[:3]
 
     def get_cued_tokenizer(self):
         return self.tokenizers[3]
+
+    def get_vocabularisers(self):
+        return self.arti_vocabulariser
 
     def get_base_vocabulariser(self):
         return self.arti_vocabulariser[:3]
@@ -42,6 +50,12 @@ class Trial:
 
     def get_results_directory(self):
         return self.results_directory
+
+    def get_graph_directory(self):
+        return self.graph_directory
+
+    def get_stats_directory(self):
+        return self.stats_directory
 
     def get_l2(self):
         return self.l2
