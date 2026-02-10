@@ -137,8 +137,6 @@ def do_basic_stats(trial, vocab_size):
     Collects basic stats and writes them to a file in the trial's stats directory.
     """
     stats_dir = trial.get_stats_directory()
-    if not stats_dir.exists():
-        stats_dir.mkdir(parents=True, exist_ok=True)
 
     stats_path = stats_dir / "basic_stats.txt"
 
