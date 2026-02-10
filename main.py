@@ -18,7 +18,7 @@ if __name__ == '__main__':
     # 1. Train and Get All Trials
     print("--- Starting Training / Retrieving Trials ---")
     all_trials = get_all_trials(data)
-    run_stats(all_trials, data['vocab_size'])
+    # run_stats(all_trials, data['vocab_size'])
 
 
 

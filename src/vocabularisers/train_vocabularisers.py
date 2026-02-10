@@ -40,7 +40,7 @@ def train_vocabulariser(algo, language, vocab_size, training_data_path):
     # preprocessor = CuePreprocessor(marker=marker)
     if "SAGE" in algo:
         base_algo = algo.split("_")[0]
-        base_artifacts, _ = train_vocabulariser(base_algo, language, vocab_size, training_data_path)
+        base_artifacts, _ = train_vocabulariser(base_algo, language, vocab_size*8, training_data_path)
         vocabulariser = xSageVocabulariser(base_artifacts, vocab_size, language, base_algo)
     elif "BPE" in algo:
         vocabulariser = xBPEVocabulariser(preprocessor, vocab_size, language)

@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from pathlib import Path
+from src.utils.unicode import get_language_map
 
 
 def tokenization_cases(tokenizers_list, word_list, l1, l2, categories):
@@ -95,28 +96,80 @@ def get_token_length_distribution(artifact):
     sorted_dis = {key: distribution[key] for key in sorted(distribution.keys())}
     return sorted_dis
 
-def write_tokenization_split(tokenizers, ff_data, l1, l2, algo, dir):
+
+def write_tokenization_split(tokenizers, ff_data, l2, file_handle):
     """
     Writes the tokenization splits of different tokenizers to a .txt file
-    :param tokenizers: a list of tokenizers, [l1 tokenizer, l2 tokenizer, l1_l2 tokenizer]
-    :param ff_data: the ff data
-    :param l1: language 1 (english)
+    :param tokenizers: a list of tokenizers, [l1 tokenizer, l2 tokenizer, l1_l2 tokenizer, cued tokenizer]
+    :param ff_data: the ff data (list of words)
     :param l2: language 2
-    :param algo: the algorithm used
-    :param dir: path to save .txt file
+    :param file_handle: open file handle to write to
     :return:
     """
-    with open(f"{dir}/{algo}.txt", 'w', encoding='utf-8') as f:
-        f.write(f"{l1}_tokenizer, {l2}_tokenizer, {l1}_{l2}_tokenizer\n")
-        for ff in ff_data:
-            to_write = f""
-            for t in tokenizers:
-                to_write += f"{t.prepareAndTokenise(ff)}"
-            to_write += "\n"
-            f.write(to_write)
+    lang_map = get_language_map()
+    cue_map = lang_map.get(l2, {})
+
+    file_handle.write(f"Word | L1_Tok | L2_Tok | Multi_Tok | Cued_Tok\n")
+
+    for ff in ff_data:
+        word = ff
+        row = [word]
+
+        # Base tokenizers (first 3)
+        for t in tokenizers[:3]:
+            row.append(str(t.prepareAndTokenise(word)))
+
+        # Cued tokenizer (4th)
+        if len(tokenizers) > 3:
+            cued_tok = tokenizers[3]
+            # Injecting cue to the first letter
+            first_char = word[0]
+            replacement = cue_map.get(first_char, first_char)
+            cued_word = replacement + word[1:]
+
+            row.append(str(cued_tok.prepareAndTokenise(cued_word)))
+
+        file_handle.write(" | ".join(row) + "\n")
+
 
 def do_basic_stats(trial, vocab_size):
+    """
+    Collects basic stats and writes them to a file in the trial's stats directory.
+    """
+    stats_dir = trial.get_stats_directory()
+    if not stats_dir.exists():
+        stats_dir.mkdir(parents=True, exist_ok=True)
 
-    with open(Path(trial.get_stats_directory() / "basic_stats.txt"), 'w', encoding='utf-8') as f:
-        lines = f.readlines()
+    stats_path = stats_dir / "basic_stats.txt"
+
+    with open(stats_path, 'w', encoding='utf-8') as f:
+        f.write(f"Basic Stats for Algo: {trial.algo}, L2: {trial.l2}, Vocab Size: {vocab_size}\n")
+        f.write("=" * 50 + "\n\n")
+
+        # 1. Vocab Stats
+        # trial.get_vocabularisers() returns list of (artifacts, vocabulariser) tuples
+        vocab_info = trial.get_vocabularisers()
+
+        names = ["L1 (en)", f"L2 ({trial.l2})", f"Multi (en_{trial.l2})", f"Cued (en_{trial.l2})"]
+
+        for idx, (name, (artifact, _)) in enumerate(zip(names, vocab_info)):
+            f.write(f"--- {name} ---\n")
+
+            avg_len = get_avg_token_length_over_vocab(artifact)
+            f.write(f"Avg Token Length (Vocab): {avg_len:.4f}\n")
+
+            dist = get_token_length_distribution(artifact)
+            # Find the most common lengths for a cleaner summary
+            sorted_dist = sorted(dist.items(), key=lambda item: item[1], reverse=True)
+            top_5 = sorted_dist[:5]
+            f.write(f"Top 5 Lengths (Length: Freq): {top_5}\n")
+            f.write(f"Full Distribution: {dist}\n\n")
+
+        # 2. Tokenization Splits
+        f.write("=" * 50 + "\n")
+        f.write("Tokenization Splits (False Friends)\n")
+        f.write("=" * 50 + "\n")
+
+        ff_list = sorted(list(trial.get_ff()))
+        write_tokenization_split(trial.get_tokenizers(), ff_list, trial.l2, f)
 
