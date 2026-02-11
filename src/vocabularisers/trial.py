@@ -4,9 +4,11 @@ from ..utils.training_data_utils import get_ff_by_path, get_crosslingual_homogra
 from src.utils.results_controller import get_results_directory
 from pathlib import Path
 
+
 class Trial:
 
-    def __init__(self, arti_vocabulariser, tokenizers, ff_data_path, l2, algo, vocab_size):
+    def __init__(self, arti_vocabulariser, tokenizers, ff_data_path, l2, algo, vocab_size, l1_corpus, l2_corpus,
+                 l1_l2_corpus, cued_corpus):
         self.arti_vocabulariser = arti_vocabulariser
         self.tokenizers = tokenizers
         self.vocab_size = vocab_size
@@ -17,6 +19,10 @@ class Trial:
         self.results_directory = get_results_directory(self.vocab_size, self.l2, self.algo)
         self.graph_directory = Path(self.results_directory / "graphs")
         self.stats_directory = Path(self.results_directory / "stats")
+        self.l1_corpus = l1_corpus
+        self.l2_corpus = l2_corpus
+        self.l1_l2_corpus = l1_l2_corpus
+        self.cued_corpus = cued_corpus
 
     def get_tokenizers(self):
         return self.tokenizers
@@ -60,10 +66,22 @@ class Trial:
     def get_l2(self):
         return self.l2
 
+    def get_l1_corpus(self):
+        return self.l1_corpus
+
+    def get_l2_corpus(self):
+        return self.l2_corpus
+
+    def get_l1_l2_corpus(self):
+        return self.l1_l2_corpus
+
+    def get_cued_corpus(self):
+        return self.cued_corpus
+
 
 def get_trial(algo, l2, vocab_size, l1_corpus_path, l2_corpus_path, l1_l2_corpus_path, cues_corpus_path):
     l2_artifacts, l2_v = train_vocabulariser(algo, l2, vocab_size, l2_corpus_path)
-    l1_artifacts, l1_v  = train_vocabulariser(algo, "en", vocab_size, l1_corpus_path)
+    l1_artifacts, l1_v = train_vocabulariser(algo, "en", vocab_size, l1_corpus_path)
     l1_l2_artifacts, l1_l2_v = train_vocabulariser(algo, f"en_{l2}", vocab_size, l1_l2_corpus_path)
     cues_artifacts, cues_v = train_vocabulariser(algo, f"en_{l2}", vocab_size, cues_corpus_path)
     return [(l1_artifacts, l1_v), (l2_artifacts, l2_v), (l1_l2_artifacts, l1_l2_v), (cues_artifacts, cues_v)]
@@ -101,7 +119,18 @@ def get_all_trials(data):
             cur_trial = all_trials[lang][algo]
             cur_tokenizers = all_tokenizers[lang][algo]
             lang_data = get_lang_data(data, lang)
-            encapsulated_trials[lang][algo] = Trial(cur_trial, cur_tokenizers, lang_data['ff'], lang, algo, data['vocab_size'])
+            encapsulated_trials[lang][algo] = Trial(
+                cur_trial,
+                cur_tokenizers,
+                lang_data['ff'],
+                lang,
+                algo,
+                data['vocab_size'],
+                l1_corpus=data['l1']['training_data'],
+                l2_corpus=lang_data['training_data'],
+                l1_l2_corpus=lang_data['multilingual_training_data'],
+                cued_corpus=lang_data['training_data_cues']
+            )
 
     return encapsulated_trials
 

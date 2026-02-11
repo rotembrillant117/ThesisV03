@@ -1,5 +1,6 @@
 from src.stats.basic_stats import tokenization_cases, plot_tokenization_cases, do_basic_stats
 from src.vocabularisers.trial import *
+from src.stats.cue_stats import do_cue_stats
 from .stats_utils import get_categories
 from src.stats.compare_stats import (
         earth_movers_dist,
@@ -18,6 +19,7 @@ def run_basic_stats(all_trials, vocab_size):
             tok_cases = tokenization_cases(cur_trial.get_base_tokenizers(), cur_trial.get_ff(), "en", cur_trial.get_l2(),categories)
             plot_tokenization_cases(tok_cases, algo, "en", lang, categories,"ff", cur_trial.get_graph_directory())
             do_basic_stats(cur_trial, vocab_size)
+            do_cue_stats(cur_trial, vocab_size)
 
 
 def run_compare_stats(all_trials, vocab_size):

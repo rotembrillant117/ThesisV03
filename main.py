@@ -2,7 +2,8 @@ import json
 import sys
 from src.vocabularisers.trial import get_all_trials
 from src.utils.results_controller import create_results_directory
-from src.stats.run_stats import run_stats
+from src.stats.run_stats import run_compare_stats, run_basic_stats
+
 
 def parse_args(path):
     with open(path, 'r') as f:
@@ -18,7 +19,8 @@ if __name__ == '__main__':
     # 1. Train and Get All Trials
     print("--- Starting Training / Retrieving Trials ---")
     all_trials = get_all_trials(data)
-    # run_stats(all_trials, data['vocab_size'])
+    run_basic_stats(all_trials, data['vocab_size'])
+    run_compare_stats(all_trials, data['vocab_size'])
 
 
 

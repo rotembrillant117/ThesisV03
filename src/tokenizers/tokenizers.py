@@ -17,9 +17,24 @@ class FixedSageTokeniser(SageTokeniser):
         for i in range(256):
             b_hex = bytes([i]).hex()
             if b_hex not in init_vocab_hex:
-                init_vocab_hex[b_hex] = next_id
 
-                extended_vocab_dict[f"<byte:{b_hex}>"] = next_id
+                # Check if it's a valid, printable character first
+                char_str = None
+                try:
+                    # Only single-byte UTF-8 (ASCII 0-127) can be decoded directly from 1 byte
+                    if i < 128:
+                        c = chr(i)
+                        # We might want to keep control chars as bytes, but letters/digits as chars
+                        if c.isprintable() and c != " ":
+                            char_str = c
+                except:
+                    pass
+
+                token_str = char_str if char_str else f"<byte:{b_hex}>"
+
+                # Assign to both hex map (for backend) and string map (for python wrapper)
+                init_vocab_hex[b_hex] = next_id
+                extended_vocab_dict[token_str] = next_id
 
                 next_id += 1
         from tktkt.interfaces.identifiers import Vocab
