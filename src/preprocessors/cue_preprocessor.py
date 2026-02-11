@@ -1,5 +1,5 @@
 from tktkt.interfaces.preprocessors import InvertibleTextMapper, Preprocessor
-from tktkt.preparation.splitters import PretokeniserSequence, MapperAsPretokeniser
+from src.utils.unicode import get_safe_latin_lowercase
 from tktkt.factories.preprocessors import ModernEnglishPretokeniser, TruncateAndNormalise
 from tktkt.preparation.boundaries import BoundaryMarker
 from src.utils.unicode import get_language_map
@@ -39,12 +39,17 @@ class CueMapping(InvertibleTextMapper):
 
         current_safe_codepoint = 0x0180
 
-        for cue in sorted_cues:
-            safe_char = chr(current_safe_codepoint)
+        # Get enough safe chars for all unique cues
+        safe_chars_pool = get_safe_latin_lowercase(limit=len(sorted_cues) + 10)
+
+        if len(safe_chars_pool) < len(sorted_cues):
+            raise ValueError(
+                f"Not enough safe lowercase Latin characters found! Needed {len(sorted_cues)}, got {len(safe_chars_pool)}")
+
+        for i, cue in enumerate(sorted_cues):
+            safe_char = safe_chars_pool[i]
             self.forward_map[cue] = safe_char
             self.backward_map[safe_char] = cue
-
-            current_safe_codepoint += 1
 
         # Create translation tables
         self.trans_forward = str.maketrans(self.forward_map)
@@ -101,6 +106,6 @@ class CuePrefab2(Preprocessor):
                 AddWordBoundary(marker),
                 GroupDigits(n=3),
                 IsolateConnectingHyphens(),
-                AddCapitalMarker(ignore_marker=marker) #TODO: probably remove this
+                # AddCapitalMarker(ignore_marker=marker) #TODO: probably remove this
             ])
         )

@@ -1,7 +1,7 @@
 from src.vocabularisers.xSageVocabulariser import xSageVocabulariser
 from src.vocabularisers.xBPEVocabulariser import xBPEVocabulariser
 from src.vocabularisers.xKudoPieceVocabulariser import xKudoVocabulariser
-from src.utils.training_data_utils import load_local_corpus_to_hf
+from src.utils.training_data_utils import load_local_corpus_to_hf, load_local_corpus_random_sample
 from src.preprocessors.cue_preprocessor import CuePreprocessor, CuePrefab2
 from tktkt.preparation.boundaries import BoundaryMarker, BoundaryMarkerLocation
 from tktkt.factories.preprocessors import ModernEnglishPreprocessor_SentencePieceCompatible
@@ -33,8 +33,9 @@ from tktkt.factories.preprocessors import ModernEnglishPreprocessor_SentencePiec
 
 
 def train_vocabulariser(algo, language, vocab_size, training_data_path):
-
+    # TODO: dont forget to change back
     corpus_ds = load_local_corpus_to_hf(training_data_path)
+    # corpus_ds = load_local_corpus_random_sample(training_data_path, limit=50_000)
     marker = BoundaryMarker("_", detached=False, location=BoundaryMarkerLocation.START)
     preprocessor = CuePrefab2(marker=marker)
     # preprocessor = CuePreprocessor(marker=marker)

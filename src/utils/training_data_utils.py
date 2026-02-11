@@ -1,6 +1,7 @@
 from datasets import Dataset, DatasetInfo
 import csv
 from pathlib import Path
+import random
 
 DATA_DIR = Path(Path(__file__).resolve().parent.parent.parent) / 'data'
 
@@ -76,3 +77,29 @@ def load_local_corpus_to_hf(path):
     info = DatasetInfo(dataset_name=f"{Path(path).stem}")
     return Dataset.from_dict({"text": lines}, info=info)
 
+def load_local_corpus_random_sample(path, limit=None):
+    with open(path, "r", encoding="utf-8") as f:
+        lines = [line.strip() for line in f if line.strip()]
+
+    if limit is not None and limit < len(lines):
+        lines = random.sample(lines, limit)
+
+    return Dataset.from_dict({"text": lines})
+
+class CorpusWordStream:
+    """
+    Iterable wrapper for corpus words to support multiple passes (re-iterable).
+    Required by tktkt.util.types.NamedIterable.
+    """
+    def __init__(self, dataset):
+        self.dataset = dataset
+
+    def __iter__(self):
+        for line in self.dataset['text']:
+            # Basic whitespace splitting
+            for word in line.strip().split():
+                if word:
+                    yield word
+
+def get_corpus_word_stream(dataset):
+    return CorpusWordStream(dataset)

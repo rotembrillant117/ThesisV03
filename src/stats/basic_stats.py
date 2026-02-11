@@ -4,7 +4,7 @@ from tktkt.evaluation.fertility import SegmentationProperties
 from tktkt.evaluation.entropy import TokenUnigramDistribution, RenyiEntropy
 from tktkt.evaluation.observing import FutureObserver, ObservableTokeniser, ObservableIterable
 from tktkt.util.types import NamedIterable
-from src.utils.training_data_utils import load_local_corpus_to_hf
+from src.utils.training_data_utils import load_local_corpus_to_hf, get_corpus_word_stream
 
 
 def tokenization_cases(tokenizers_list, word_list, l1, l2, categories):
@@ -249,10 +249,10 @@ def do_basic_stats(trial, vocab_size):
         "Tokenizer",
         "Avg Len (Vocab)",
         "Fertility (Train)",
-        "Compression (Train)",
+        "CPT (Train)",
         "Entropy (Train)",
         "Fertility (Homographs)",
-        "Compression (Homographs)"
+        "CPT (Homographs)"
     ]
 
     table_rows = []
@@ -290,7 +290,8 @@ def do_basic_stats(trial, vocab_size):
         training_texts = hf_dataset['text']
 
         # Training Corpus Stats - Single Pass Pipeline
-        t_fert, t_ent = run_stats_pipeline(tokenizer, training_texts, f"{name}_train")
+        training_words_gen = get_corpus_word_stream(hf_dataset)
+        t_fert, t_ent = run_stats_pipeline(tokenizer, training_words_gen, f"{name}_train")
 
         # Homograph Stats
         h_fert, _ = run_stats_pipeline(tokenizer, homographs, f"{name}_homographs")
