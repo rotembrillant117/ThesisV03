@@ -11,7 +11,7 @@ class FixedSageTokeniser(SageTokeniser):
             SageVocabulariser._toHexString(t): i for t, i in vocab.items()
         }
 
-        next_id = max(vocab.values()) + 1
+        next_id = max(vocab.values()) + 1 if vocab else 0
         extended_vocab_dict = dict(vocab)
 
         for i in range(256):

@@ -35,10 +35,8 @@ from tktkt.factories.preprocessors import ModernEnglishPreprocessor_SentencePiec
 def train_vocabulariser(algo, language, vocab_size, training_data_path):
     # TODO: dont forget to change back
     corpus_ds = load_local_corpus_to_hf(training_data_path)
-    # corpus_ds = load_local_corpus_random_sample(training_data_path, limit=50_000)
     marker = BoundaryMarker("_", detached=False, location=BoundaryMarkerLocation.START)
     preprocessor = CuePrefab2(marker=marker)
-    # preprocessor = CuePreprocessor(marker=marker)
     if "SAGE" in algo:
         base_algo = algo.split("_")[0]
         base_artifacts, _ = train_vocabulariser(base_algo, language, vocab_size*8, training_data_path)
@@ -63,7 +61,7 @@ def train(data):
 
     # Training l2 vocabularisers, multilingual vocabularisers and language cued vocabularisers
     l2_data = data['l2']
-    for i in range(1):
+    for i in range(len(l2_data)):
         for algo in algorithms:
             train_vocabulariser(algo, l2_data[i]['language'], vocab_size, l2_data[i]['training_data'])
             train_vocabulariser(algo, f"{l1_data['language']}_{l2_data[i]['language']}", vocab_size, l2_data[i]['multilingual_training_data'])

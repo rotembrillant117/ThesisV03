@@ -1,10 +1,10 @@
 from tktkt.interfaces.preprocessors import InvertibleTextMapper, Preprocessor
-from src.utils.unicode import get_safe_latin_lowercase
+from src.utils.unicode import get_safe_latin_chars
 from tktkt.factories.preprocessors import ModernEnglishPretokeniser, TruncateAndNormalise
 from tktkt.preparation.boundaries import BoundaryMarker
 from src.utils.unicode import get_language_map
 from tktkt.preparation.splitters import (
-    PretokeniserSequence, MapperAsPretokeniser, IsolatePunctuation, HyphenMode,
+    PretokeniserSequence, IsolatePunctuation, HyphenMode,
     WhitespacePretokeniser, IsolateEnglishContractions, PolariseApostrophes,
     AddWordBoundary, GroupDigits, IsolateConnectingHyphens, AddCapitalMarker
 )
@@ -40,11 +40,7 @@ class CueMapping(InvertibleTextMapper):
         current_safe_codepoint = 0x0180
 
         # Get enough safe chars for all unique cues
-        safe_chars_pool = get_safe_latin_lowercase(limit=len(sorted_cues) + 10)
-
-        if len(safe_chars_pool) < len(sorted_cues):
-            raise ValueError(
-                f"Not enough safe lowercase Latin characters found! Needed {len(sorted_cues)}, got {len(safe_chars_pool)}")
+        safe_chars_pool = get_safe_latin_chars(limit=len(sorted_cues) + 10)
 
         for i, cue in enumerate(sorted_cues):
             safe_char = safe_chars_pool[i]
@@ -94,10 +90,10 @@ class CuePrefab2(Preprocessor):
     while also mapping language cues to safe Latin characters (like CuePreprocessor)
     to prevent tokenizer crashes.
     """
-    def __init__(self, marker: BoundaryMarker, truncate_text_after_chars: int=1_000_000):
+    def __init__(self, marker: BoundaryMarker, truncate_text_after_chars: int = 1_000_000):
         super().__init__(
             uninvertible_mapping=TruncateAndNormalise(truncate_text_after_chars),
-            invertible_mapping=CueMapping(), # Use CueMapping instead of RegisterASCII
+            invertible_mapping=CueMapping(),  # Use CueMapping instead of RegisterASCII
             splitter=PretokeniserSequence([
                 IsolatePunctuation(HyphenMode.EXCLUDED, protect_apostrophes_without_spaces=True),
                 WhitespacePretokeniser(destructive=True),
@@ -106,6 +102,6 @@ class CuePrefab2(Preprocessor):
                 AddWordBoundary(marker),
                 GroupDigits(n=3),
                 IsolateConnectingHyphens(),
-                # AddCapitalMarker(ignore_marker=marker) #TODO: probably remove this
+                AddCapitalMarker(ignore_marker=marker)
             ])
         )
