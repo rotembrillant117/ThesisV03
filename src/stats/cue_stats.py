@@ -71,8 +71,11 @@ def analyze_cue_survival(vocab, l2_lang, file_handle):
         en_decoding_map[safe_char] = ascii_char
 
     # Track survival
-    l2_surviving = set()
-    en_surviving = set()
+    l2_surviving_any = set()
+    en_surviving_any = set()
+
+    l2_surviving_lone = set()
+    en_surviving_lone = set()
 
     l2_tokens = []
     en_tokens = []
@@ -81,13 +84,20 @@ def analyze_cue_survival(vocab, l2_lang, file_handle):
         has_l2 = False
         has_en = False
 
+        # Check for Lone Survival (Token IS the cue)
+        if token in l2_safe_map:
+            l2_surviving_lone.add(token)
+        if token in en_safe_map:
+            en_surviving_lone.add(token)
+
+        # Check for Any Survival (Cue is part of token)
         for char in token:
             if char in l2_safe_map:
                 has_l2 = True
-                l2_surviving.add(l2_safe_map[char])
+                l2_surviving_any.add(char)
             if char in en_safe_map:
                 has_en = True
-                en_surviving.add(en_safe_map[char])
+                en_surviving_any.add(char)
 
         if has_l2:
             l2_tokens.append(token)
@@ -104,25 +114,43 @@ def analyze_cue_survival(vocab, l2_lang, file_handle):
     total_en = len(en_safe_map)
     total_l2 = len(l2_safe_map)
     file_handle.write(f"{'Total Cues':<20} | {total_en:<10} | {total_l2:<10}\n")
+    file_handle.write("-" * len(header) + "\n")
 
-    # Survived
-    surv_en = len(en_surviving)
-    surv_l2 = len(l2_surviving)
-    file_handle.write(f"{'Survived':<20} | {surv_en:<10} | {surv_l2:<10}\n")
+    # Survived (Any)
+    surv_en_any = len(en_surviving_any)
+    surv_l2_any = len(l2_surviving_any)
+    file_handle.write(f"{'Survived (Any)':<20} | {surv_en_any:<10} | {surv_l2_any:<10}\n")
 
-    # Missing Count
-    miss_en = total_en - surv_en
-    miss_l2 = total_l2 - surv_l2
-    file_handle.write(f"{'Missing':<20} | {miss_en:<10} | {miss_l2:<10}\n\n")
+    # Survived (Lone)
+    surv_en_lone = len(en_surviving_lone)
+    surv_l2_lone = len(l2_surviving_lone)
+    file_handle.write(f"{'Survived (Lone)':<20} | {surv_en_lone:<10} | {surv_l2_lone:<10}\n")
+
+    file_handle.write("-" * len(header) + "\n")
+
+    # Missing (Any)
+    miss_en_any = total_en - surv_en_any
+    miss_l2_any = total_l2 - surv_l2_any
+    file_handle.write(f"{'Missing (Any)':<20} | {miss_en_any:<10} | {miss_l2_any:<10}\n")
+
+    # Missing (Lone)
+    miss_en_lone = total_en - surv_en_lone
+    miss_l2_lone = total_l2 - surv_l2_lone
+    file_handle.write(f"{'Missing (Lone)':<20} | {miss_en_lone:<10} | {miss_l2_lone:<10}\n\n")
 
     # 2. Detailed Missing Lists
     file_handle.write(f"### Missing Cues Details\n")
 
-    en_missing = sorted(list(set(en_safe_map.values()) - en_surviving))
-    l2_missing = sorted(list(set(l2_safe_map.values()) - l2_surviving))
+    en_missing_any = sorted(list(set(en_safe_map.keys()) - en_surviving_any))
+    l2_missing_any = sorted(list(set(l2_safe_map.keys()) - l2_surviving_any))
 
-    file_handle.write(f"English Missing: {en_missing}\n")
-    file_handle.write(f"{l2_lang} Missing: {l2_missing}\n\n")
+    en_missing_lone = sorted(list(set(en_safe_map.keys()) - en_surviving_lone))
+    l2_missing_lone = sorted(list(set(l2_safe_map.keys()) - l2_surviving_lone))
+
+    file_handle.write(f"English Missing (Any):  {en_missing_any}\n")
+    file_handle.write(f"{l2_lang} Missing (Any):      {l2_missing_any}\n")
+    file_handle.write(f"English Missing (Lone): {en_missing_lone}\n")
+    file_handle.write(f"{l2_lang} Missing (Lone):     {l2_missing_lone}\n\n")
 
     # 3. Distributions
     _write_token_distribution("English", en_tokens, en_decoding_map, file_handle)
